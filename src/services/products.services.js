@@ -24,10 +24,19 @@ export const createProduct = async (data) => {
 };
 
 export const updateProduct = async (id, data) => {
+  const allowedFields = ["name", "price", "description", "stock", "imageUrl"];
+  const updateData = {};
+
+  allowedFields.forEach((field) => {
+    if (field in data) {
+      updateData[field] = data[field];
+    }
+  });
+
   try {
     return await prisma.product.update({  // Actualiza el producto que coincida con el ID
       where: { id },
-      data: data
+      data: updateData
     });
   } catch (error) {
     return null;  // Si Prisma no encuentra el registro al intentar actualizarlo, arrojará un error

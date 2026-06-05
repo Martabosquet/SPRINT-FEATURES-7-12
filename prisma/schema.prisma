@@ -19,5 +19,5 @@ model Product {
   stock       Int      @default(0)  //Si registras un producto y olvidas poner cuántas unidades tienes, el sistema asume que tienes cero.
   imageUrl    String   @default("https://placehold.co/300x300?text=Producto") //Asigna una imagen genérica de respaldo (un placeholder).
   createdAt   DateTime @default(now()) //Guarda la fecha y hora exacta del momento preciso en el que el producto se inserta en la base de datos
-  updatedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
