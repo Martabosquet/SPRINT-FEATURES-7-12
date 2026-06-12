@@ -6,10 +6,13 @@ import { requireRole } from "../middlewares/requireRole.js"
 const router = express.Router()
 
 // Ruta pública
-router.post("/login", authController.login)
+router.post('/auth/register', authController.register);
+router.post("/auth/login", authController.login);
+router.post("/auth/logout", authController.logout);
+
 // Rutas protegidas
-router.get("/profile", authMiddleware, authController.getProfile)
-router.post("/logout", authController.logout)
+router.get("/users/profile", authMiddleware, authController.getProfile);
+
 // Ruta restringida por rol
 router.get(
   "/admin",

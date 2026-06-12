@@ -28,6 +28,4 @@ model User {
   password  String
   role      String   @default("user")
   createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("users")
 }
