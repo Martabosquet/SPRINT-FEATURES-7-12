@@ -9,6 +9,10 @@ export const getReviewsByMovie = async (movieId) => {
     return await Review.find({ movieId })
 }
 
+export const getReviewById = async (id) => {
+    return await Review.findById(id)
+}
+
 export const updateReview = async (id, data) => {
     return await Review.findByIdAndUpdate(id, data, { new: true })
 }

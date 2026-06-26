@@ -1,4 +1,4 @@
-import { productsService } from "../services/products.services.js"
+import { productsService } from "../services/products.service.js"
 //import CError, { Selector } from "../utils/CError.js"
 
 const getProducts = async (req, res, next) => {
@@ -10,7 +10,7 @@ const getProducts = async (req, res, next) => {
     })
   } catch (error) {
     next(error)
-    }
+  }
 
 
 };
@@ -23,7 +23,7 @@ const getProductById = async (req, res, next) => {
     if (!product) {
       return res.status(404).json({
         ok: false,
-        message: "Producto no encontrado",
+        error: "Producto no encontrado",
       })
     }
 
@@ -49,14 +49,14 @@ const createProduct = async (req, res, next) => {
 };
 
 const updateProduct = async (req, res, next) => {
-    try {
+  try {
     const id = req.params.id
     const updatedProduct = await productsService.updateProduct(id, req.body)
 
     if (!updatedProduct) {
       return res.status(404).json({
         ok: false,
-        message: "Producto no encontrado",
+        error: "Producto no encontrado",
       })
     }
 
@@ -71,7 +71,7 @@ const updateProduct = async (req, res, next) => {
 };
 
 const deleteProduct = async (req, res, next) => {
-    try {
+  try {
     const id = req.params.id
     await productsService.deleteProduct(id)
 
@@ -83,7 +83,7 @@ const deleteProduct = async (req, res, next) => {
     if (error.code === "P2025") {
       return res.status(404).json({
         ok: false,
-        message: "Producto no encontrado",
+        error: "Producto no encontrado",
       })
     }
     next(error)

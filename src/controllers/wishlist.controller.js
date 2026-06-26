@@ -1,17 +1,20 @@
-import * as wishlistService from "../services/wishlistService.js"
+import * as wishlistService from "../services/wishlist.service.js"
 
 export const addToWishlist = async (req, res) => {
     try {
-        const { userId, movieId } = req.body
+        // userId extraído de forma segura del token JWT (no del body)
+        const userId = String(req.user.id)
+        // productId extraído de los parámetros de la URL (/api/wishlist/:productId)
+        const { productId } = req.params
 
-        if (!userId || !movieId) {
+        if (!productId) {
             return res.status(400).json({
                 ok: false,
-                error: "Id de usuario y de película son obligatorios",
+                error: "El id del producto es obligatorio",
             })
         }
 
-        const wishlistItem = await wishlistService.addToWishlist(userId, movieId)
+        const wishlistItem = await wishlistService.addToWishlist(userId, productId)
         res.status(201).json({
             ok: true,
             data: wishlistItem,
@@ -26,9 +29,10 @@ export const addToWishlist = async (req, res) => {
 
 export const getWishlistByUser = async (req, res) => {
     try {
-        const wishlistItems = await wishlistService.getWishlistByUser(
-            req.params.userId,
-        )
+        // userId extraído de forma segura del token JWT
+        const userId = String(req.user.id)
+
+        const wishlistItems = await wishlistService.getWishlistByUser(userId)
         res.json({
             ok: true,
             data: wishlistItems,

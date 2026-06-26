@@ -2,14 +2,16 @@ import prisma from "../config/prismaClient.js"
 
 // Obtenemos el carrito active del user y si no existe lo crea
 export const getCart = async (userId) => {
+    const normalizedUserId = String(userId)
+
     let cart = await prisma.cart.findFirst({
-        where: { userId, status: "ACTIVE" },
+        where: { userId: normalizedUserId, status: "ACTIVE" },
         include: { items: true },
     })
 
     if (!cart) {
         cart = await prisma.cart.create({
-            data: { userId },
+            data: { userId: normalizedUserId },
             include: { items: true },
         })
     }
@@ -49,9 +51,44 @@ export const addItem = async (userId, productId, quantity) => {
     })
 }
 
+// Eliminar un producto del carrito por su itemId
+export const removeItem = async (itemId) => {
+    try {
+        return await prisma.cartItem.delete({
+            where: { id: itemId },
+        })
+    } catch (error) {
+        return null // Si Prisma no encuentra el item, devuelve null
+    }
+}
+
+// Disminuir la cantidad de un item del carrito
+export const decreaseItemQuantity = async (itemId, quantity) => {
+    const item = await prisma.cartItem.findUnique({
+        where: { id: itemId },
+    })
+
+    if (!item) return null
+
+    const newQuantity = item.quantity - quantity
+
+    if (newQuantity <= 0) {
+        return prisma.cartItem.delete({
+            where: { id: itemId },
+        })
+    }
+
+    return prisma.cartItem.update({
+        where: { id: itemId },
+        data: { quantity: newQuantity },
+    })
+}
+
 export const checkout = async (userId) => {
+    const normalizedUserId = String(userId)
+
     const cart = await prisma.cart.findFirst({
-        where: { userId, status: "ACTIVE" },
+        where: { userId: normalizedUserId, status: "ACTIVE" },
         include: { items: true },
     })
 

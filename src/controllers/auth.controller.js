@@ -5,17 +5,24 @@ const register = async (req, res) => {
     const { email, password, role } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email y contraseña son requeridos" });
+      return res.status(400).json({
+        ok: false,
+        error: "Email y contraseña son requeridos",
+      });
     }
 
     const newUser = await authService.registerUser(email, password, role);
 
     res.status(201).json({
+      ok: true,
       message: "Usuario registrado con éxito",
-      data: newUser
+      data: newUser,
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({
+      ok: false,
+      error: error.message,
+    });
   }
 };
 
@@ -43,8 +50,7 @@ const login = async (req, res) => {
     res.json({
       ok: true,
       message: "El login se realizó con éxito",
-      token,
-    })
+    }) //no enseño el token en la respuesta, para evitar que alguien lo pueda robar. Solo lo guardo en la cookie
 
   } catch (error) {
     res.status(401).json({
@@ -55,11 +61,12 @@ const login = async (req, res) => {
 }
 
 const logout = (req, res) => {
+  res.clearCookie("token")
   res.json({
     ok: true,
     message: "Sesión cerrada",
-  })
-}
+  }) //no hay que indicar qué usuario es el que cierra sesión, solo borra la cookie
+} //buena práctica de cara a front-end que aunque des varios clicks en cerrar sesión siga saliendo "Sesión cerrada" y no dé error (endpoint silencioso e idempotente)
 
 const getProfile = (req, res) => {
   res.json({

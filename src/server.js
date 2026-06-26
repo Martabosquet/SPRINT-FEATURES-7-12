@@ -1,4 +1,4 @@
-//SERVER SOLO ARRANCA EL SERVIDOR, NO TIENE RUTAS, SOLO SE ENCARGA DE ARRANCAR EL SERVIDOR Y DE GESTIONAR LOS ERRORES 404
+//SERVER SOLO SE ENCARGA DE ARRANCAR EL SERVIDOR, NO GESTIONA RUTAS
 
 import "dotenv/config"
 import app from "./app.js"
@@ -6,13 +6,6 @@ import { dbConnection } from "./config/mongo.js"
 
 const PORT = process.env.PORT || 3000
 
-app.use((req, res) => {
-    res.status(404).json({
-        ok: false,
-        message: "Error 404: La ruta solicitada no existe",
-        data: null
-    });
-});
 
 try {
     await dbConnection()
