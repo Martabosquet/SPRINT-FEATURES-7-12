@@ -21,27 +21,28 @@
   },
   "homepage": "https://github.com/Martabosquet/SPRINT-FEATURES-7#readme",
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "bcrypt": "^6.0.0",
-    "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
+    "@prisma/adapter-pg": "7.8.0",
+    "@prisma/client": "7.8.0",
+    "bcrypt": "6.0.0",
+    "cookie-parser": "1.4.7",
+    "cors": "2.8.6",
     "express": "5.2.1",
-    "express-rate-limit": "^8.5.2",
-    "helmet": "^8.2.0",
-    "jsonwebtoken": "^9.0.3",
-    "mongodb": "^7.3.0",
-    "mongoose": "^9.7.0",
-    "pg": "^8.21.0",
-    "supertest": "^7.2.2",
-    "swagger-ui-express": "^5.0.1"
+    "express-rate-limit": "8.5.2",
+    "helmet": "8.2.0",
+    "jsonwebtoken": "9.0.3",
+    "mongodb": "7.3.0",
+    "mongoose": "9.7.0",
+    "pg": "8.21.0",
+    "supertest": "7.2.2",
+    "swagger-jsdoc": "6.3.0",
+    "swagger-ui-express": "5.0.1"
   },
   "jest": {
     "testEnvironment": "node",
     "transform": {}
   },
   "devDependencies": {
-    "jest": "^30.4.2",
-    "prisma": "^7.8.0"
+    "jest": "30.4.2",
+    "prisma": "7.8.0"
   }
 }

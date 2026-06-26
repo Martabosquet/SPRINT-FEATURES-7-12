@@ -1,0 +1,632 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Ecommerce API",
+    "version": "1.0.0",
+    "description": "API de e-commerce con carrito de compra, reviews y wishlist"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Servidor local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token JWT obtenido en POST /api/auth/login. Formato: Bearer token"
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean", "example": false },
+          "error": { "type": "string", "example": "Descripción del error" }
+        }
+      },
+      "SuccessMessageResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean", "example": true },
+          "message": { "type": "string", "example": "Operación realizada correctamente" }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 6 },
+          "email": { "type": "string", "format": "email", "example": "user@example.com" },
+          "role": { "type": "string", "example": "user" }
+        }
+      },
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string", "example": "Descripción del producto" },
+          "price": { "type": "number", "example": 12.99 },
+          "stock": { "type": "integer", "example": 10 },
+          "imageUrl": { "type": "string", "format": "uri", "example": "https://placehold.co/300x300?text=Producto" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "movieId": { "type": "string" },
+          "userId": { "type": "string" },
+          "rating": { "type": "integer", "example": 8 },
+          "comment": { "type": "string", "example": "Muy buena película" },
+          "fechaDeVisualizacion": { "type": "string", "example": "2026-06-26" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WishlistItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "productId": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CartItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "cartId": { "type": "string" },
+          "productId": { "type": "string" },
+          "quantity": { "type": "integer" }
+        }
+      },
+      "Cart": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "status": { "type": "string", "enum": ["ACTIVE", "CHECKED_OUT"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CartItem" }
+          }
+        }
+      },
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "userId": { "type": "string" },
+          "total": { "type": "number" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/cart": {
+      "get": {
+        "tags": ["Cart"],
+        "summary": "Obtener el carrito activo",
+        "description": "Devuelve el carrito activo del usuario autenticado. Si no existe, lo crea automáticamente.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Carrito devuelto correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/Cart" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Token no proporcionado o inválido" }
+        }
+      }
+    },
+    "/api/cart/items": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Añadir producto al carrito",
+        "description": "Añade un producto al carrito activo. Si el producto ya existe, suma la cantidad.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["productId", "quantity"],
+                "properties": {
+                  "productId": { "type": "string", "example": "v3478-aguskdj-828731hksja" },
+                  "quantity": { "type": "integer", "minimum": 1, "example": 2 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Producto añadido al carrito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/CartItem" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/cart/items/{itemId}": {
+      "delete": {
+        "tags": ["Cart"],
+        "summary": "Eliminar un item del carrito",
+        "description": "Elimina completamente el item del carrito usando su itemId.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "itemId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Item eliminado correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      },
+      "patch": {
+        "tags": ["Cart"],
+        "summary": "Disminuir la cantidad de un item",
+        "description": "Resta una cantidad al item del carrito. Si la cantidad llega a 0, elimina el item.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "itemId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["quantity"],
+                "properties": {
+                  "quantity": { "type": "integer", "minimum": 1, "example": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cantidad actualizada correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/CartItem" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/cart/checkout": {
+      "post": {
+        "tags": ["Cart"],
+        "summary": "Realizar checkout",
+        "description": "Crea un pedido con los productos del carrito y cambia el estado del carrito a CHECKED_OUT.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Pedido creado. Carrito cerrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "data": { "$ref": "#/components/schemas/Order" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Registrar un usuario",
+        "description": "Registra un nuevo usuario con email, contraseña y rol opcional.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "password": { "type": "string", "example": "secret123" },
+                  "role": { "type": "string", "example": "user" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario registrado correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Usuario registrado con éxito" },
+                    "data": { "$ref": "#/components/schemas/UserProfile" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Iniciar sesión",
+        "description": "Genera un token JWT y lo devuelve en cookie httpOnly.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@example.com" },
+                  "password": { "type": "string", "example": "secret123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login exitoso y cookie con token enviada", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Cerrar sesión",
+        "description": "Borra la cookie de autenticación del usuario.",
+        "responses": {
+          "200": { "description": "Sesión cerrada correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } }
+        }
+      }
+    },
+    "/api/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Obtener perfil de usuario",
+        "description": "Devuelve los datos del usuario autenticado a partir del token.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Perfil devuelto correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/UserProfile" } } } } } },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/admin": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Zona de admin",
+        "description": "Ruta protegida que solo puede usar el rol admin.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Acceso concedido al administrador", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "403": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Listar productos",
+        "description": "Obtiene todos los productos disponibles.",
+        "responses": {
+          "200": { "description": "Productos devueltos correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Product" } } } } } } }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Crear producto",
+        "description": "Crea un nuevo producto. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "price"],
+                "properties": {
+                  "name": { "type": "string", "example": "Camiseta" },
+                  "price": { "type": "number", "example": 25.5 },
+                  "description": { "type": "string", "example": "Camiseta de algodón" },
+                  "stock": { "type": "integer", "example": 50 },
+                  "imageUrl": { "type": "string", "format": "uri", "example": "https://placehold.co/300x300?text=Camisa" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Producto creado correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/Product" } } } } } },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" },
+          "403": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Obtener producto por ID",
+        "description": "Busca un producto por su id.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Producto encontrado", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/Product" } } } } } },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      },
+      "put": {
+        "tags": ["Products"],
+        "summary": "Actualizar producto",
+        "description": "Actualiza un producto existente. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "price": { "type": "number" },
+                  "description": { "type": "string" },
+                  "stock": { "type": "integer" },
+                  "imageUrl": { "type": "string", "format": "uri" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Producto actualizado correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/Product" } } } } } },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Eliminar producto",
+        "description": "Elimina un producto existente. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Producto eliminado correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/reviews/movie/{movieId}": {
+      "get": {
+        "tags": ["Reviews"],
+        "summary": "Obtener reviews por película",
+        "description": "Lista todas las reviews asociadas a una película.",
+        "parameters": [
+          { "name": "movieId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Reviews devueltas correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Review" } } } } } } }
+        }
+      }
+    },
+    "/reviews": {
+      "post": {
+        "tags": ["Reviews"],
+        "summary": "Crear review",
+        "description": "Crea una nueva review. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["movieId", "rating"],
+                "properties": {
+                  "movieId": { "type": "string", "example": "tt1234567" },
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 10, "example": 8 },
+                  "comment": { "type": "string", "example": "Muy buena" },
+                  "fechaDeVisualizacion": { "type": "string", "example": "2026-06-26" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Review creada correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/Review" } } } } } },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" },
+          "403": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/reviews/{id}": {
+      "put": {
+        "tags": ["Reviews"],
+        "summary": "Actualizar review",
+        "description": "Actualiza una review existente. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 10 },
+                  "comment": { "type": "string" },
+                  "fechaDeVisualizacion": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Review actualizada correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/Review" } } } } } },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" },
+          "403": { "$ref": "#/components/schemas/ErrorResponse" },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "tags": ["Reviews"],
+        "summary": "Eliminar review",
+        "description": "Elimina una review existente. Solo admins pueden acceder.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Review eliminada correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" },
+          "403": { "$ref": "#/components/schemas/ErrorResponse" },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/wishlist": {
+      "get": {
+        "tags": ["Wishlist"],
+        "summary": "Obtener wishlist del usuario",
+        "description": "Devuelve los productos en la wishlist del usuario autenticado.",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Wishlist devuelta correctamente", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/WishlistItem" } } } } } } },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/wishlist/{productId}": {
+      "post": {
+        "tags": ["Wishlist"],
+        "summary": "Añadir producto a wishlist",
+        "description": "Añade un producto a la wishlist del usuario autenticado.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "productId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Producto añadido a wishlist", "content": { "application/json": { "schema": { "type": "object", "properties": { "ok": { "type": "boolean", "example": true }, "data": { "$ref": "#/components/schemas/WishlistItem" } } } } } },
+          "400": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/api/wishlist/{id}": {
+      "delete": {
+        "tags": ["Wishlist"],
+        "summary": "Eliminar item de wishlist",
+        "description": "Elimina un elemento de la wishlist del usuario autenticado.",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Elemento eliminado correctamente", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SuccessMessageResponse" } } } },
+          "404": { "$ref": "#/components/schemas/ErrorResponse" },
+          "401": { "$ref": "#/components/schemas/ErrorResponse" }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Comprobar estado de la API",
+        "description": "Comprueba que el servidor está activo y devuelve uptime y timestamp.",
+        "responses": {
+          "200": {
+            "description": "API funcionando correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "API funcionando correctamente" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "status": { "type": "string", "example": "up" }
+                      }
+                    },
+                    "uptime": { "type": "number", "example": 12.34 },
+                    "timestamp": { "type": "string", "format": "date-time", "example": "2026-06-26T12:00:00.000Z" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

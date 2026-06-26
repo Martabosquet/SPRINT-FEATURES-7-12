@@ -10,6 +10,12 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
+import swaggerUi from "swagger-ui-express";
+import fs from "node:fs";
+
+// necesarias en type module porque no existen __dirname ni __filename de forma nativa
+import { join, dirname } from "node:path"
+import { fileURLToPath } from "node:url"
 
 // -------------------------------------------------------------------------
 // 2. IMPORTACIONES DE ENRUTADORES (Definen los endpoints de la API)
@@ -79,6 +85,16 @@ app.get("/", (req, res) => {
     message: "API Crud completo activa",
   });
 });
+
+// guardamos la carpeta actual donde se encuentra el archivo y normalizamos con fileURLToPath
+const __dirname = dirname(fileURLToPath(import.meta.url))
+
+// Leemos el archivo swagger.json directamente
+const swaggerDocument = JSON.parse(
+  fs.readFileSync(join(__dirname, "../swagger.json"), "utf8"),
+)
+
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // Enrutadores específicos de recursos
 app.use(reviewRoutes);
