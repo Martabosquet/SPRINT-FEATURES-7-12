@@ -1,5 +1,5 @@
 import { productsService } from "../services/products.service.js"
-//import CError, { Selector } from "../utils/CError.js"
+import prisma from "../config/prismaClient.js"
 
 const getProducts = async (req, res, next) => {
   try {
@@ -17,24 +17,16 @@ const getProducts = async (req, res, next) => {
 
 const getProductById = async (req, res, next) => {
   try {
-    const id = req.params.id
-    const product = await productsService.getProductById(id)
+    const { id } = req.params;
 
-    if (!product) {
-      return res.status(404).json({
-        ok: false,
-        error: "Producto no encontrado",
-      })
-    }
+    const product = await prisma.product.findUniqueOrThrow({     // findUniqueOrThrow lanza automáticamente un error si no lo encuentra.
+      where: { id }
+    });
 
-    res.json({
-      ok: true,
-      data: product,
-    })
+    return res.json({ ok: true, data: product });
   } catch (error) {
-    next(error)
+    next(error); // Prisma envía su error nativo con código P2025
   }
-
 };
 
 const createProduct = async (req, res, next) => {
@@ -52,45 +44,31 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const id = req.params.id;
-    // Ahora enviamos también req.file al servicio
-    const updatedProduct = await productsService.updateProduct(id, req.body, req.file);
+    const { id } = req.params;
 
-    res.json({
-      ok: true,
-      data: updatedProduct,
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: req.body
     });
+
+    return res.json({ ok: true, data: updatedProduct });
   } catch (error) {
-    // Si Prisma no encuentra el ID, lanzará el código P2025
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        ok: false,
-        error: "Producto no encontrado",
-      });
-    }
     next(error);
   }
 };
 
 const deleteProduct = async (req, res, next) => {
   try {
-    const id = req.params.id
-    await productsService.deleteProduct(id)
+    const { id } = req.params;
 
-    res.json({
-      ok: true,
-      message: "Producto eliminado correctamente",
-    })
+    await prisma.product.delete({
+      where: { id }
+    });
+
+    return res.json({ ok: true, message: "Producto eliminado con éxito" });
   } catch (error) {
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        ok: false,
-        error: "Producto no encontrado",
-      })
-    }
-    next(error)
+    next(error);
   }
-
 };
 
 export const productsController = {

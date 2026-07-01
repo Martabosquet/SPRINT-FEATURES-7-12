@@ -100,18 +100,40 @@ export const checkout = async (userId) => {
         throw new Error("El carrito está vacío")
     }
 
-    let total = 0
+    const itemsData = await Promise.all(
+        cart.items.map(async (item) => {
+            const product = await prisma.product.findUnique({
+                where: { id: item.productId },
+            })
 
-    for (const item of cart.items) {
-        const product = await prisma.product.findUnique({
-            where: { id: item.productId },
-        })
+            if (!product) {
+                throw new Error(`Producto con id ${item.productId} no encontrado`)
+            }
 
-        total += product.price * item.quantity
-    }
+            return {
+                productId: item.productId,
+                quantity: item.quantity,
+                priceAtPurchase: product.price,
+            }
+        }),
+    )
+
+    const totalValue = itemsData.reduce(
+        (sum, item) => sum + item.priceAtPurchase * item.quantity,
+        0,
+    )
 
     const order = await prisma.order.create({
-        data: { userId, total },
+        data: {
+            userId: normalizedUserId,
+            total: totalValue,
+            items: {
+                create: itemsData,
+            },
+        },
+        include: {
+            items: true,
+        },
     })
 
     await prisma.cart.update({
@@ -120,4 +142,23 @@ export const checkout = async (userId) => {
     })
 
     return order
+}
+
+export const getOrdersByUser = async (userId) => {
+    const normalizedUserId = String(userId)
+
+    return await prisma.order.findMany({
+        where: { userId: normalizedUserId },
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+    })
+}
+
+export const getOrderById = async (userId, orderId) => {
+    const normalizedUserId = String(userId)
+
+    return await prisma.order.findFirst({
+        where: { id: orderId, userId: normalizedUserId },
+        include: { items: true },
+    })
 }

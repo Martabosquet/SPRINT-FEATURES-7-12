@@ -1,42 +1,46 @@
 import * as reviewService from "../services/review.service.js"
 
-export const createReview = async (req, res) => {
+export const createReview = async (req, res, next) => {
     try {
-        // Enlazar de forma segura el userId extraído del token del usuario logueado
+        const { productId } = req.params
+
+        if (!productId) {
+            return res.status(400).json({
+                ok: false,
+                error: "El productId es obligatorio en la URL",
+            })
+        }
+
         const reviewData = {
             ...req.body,
-            userId: String(req.user.id)
+            userId: String(req.user.id),
+            productId,
         }
-        
+
         const review = await reviewService.createReview(reviewData)
         res.status(201).json({
             ok: true,
             data: review,
         })
     } catch (error) {
-        res.status(400).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const getReviewsByMovie = async (req, res) => {
+export const getReviewsByProduct = async (req, res, next) => {
     try {
-        const reviews = await reviewService.getReviewsByMovie(req.params.movieId)
+        const { productId } = req.params
+        const reviews = await reviewService.getReviewsByProduct(productId)
         res.json({
             ok: true,
             data: reviews,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const updateReview = async (req, res) => {
+export const updateReview = async (req, res, next) => {
     try {
         const reviewId = req.params.id
 
@@ -65,14 +69,11 @@ export const updateReview = async (req, res) => {
             data: review,
         })
     } catch (error) {
-        res.status(400).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const deleteReview = async (req, res) => {
+export const deleteReview = async (req, res, next) => {
     try {
         const reviewId = req.params.id
 
@@ -101,9 +102,6 @@ export const deleteReview = async (req, res) => {
             message: "Review eliminada",
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }

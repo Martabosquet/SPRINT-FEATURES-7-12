@@ -26,7 +26,7 @@ export const removeFromWishlist = async (id) => {
 
 //Funciones puras para testeo
 
-export const addMovieToWishlist = (list, productId) => {
+export const addProductToWishlist = (list, productId) => {
     if (list.includes(productId)) {  // comprobamos que el producto existe dentro de la lista para evitar duplicados
         return list
     }
@@ -34,10 +34,10 @@ export const addMovieToWishlist = (list, productId) => {
     return [...list, productId] // si no está, creamos nuevo array clonando la lista y añadiendo el nuevo producto
 }
 
-export const removeMovieFromWishlist = (list, productId) => {
-    return list.filter((id) => id !== productId) // Elimina una película de la lista
+export const removeProductFromWishlist = (list, productId) => {
+    return list.filter((id) => id !== productId)
 }
 
-export const isMovieInWishlist = (list, productId) => {
-    return list.includes(productId) // Comprueba si una película está en la lista, devuelve true o false
+export const isProductInWishlist = (list, productId) => {
+    return list.includes(productId)
 }

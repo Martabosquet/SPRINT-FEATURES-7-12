@@ -1,7 +1,7 @@
 export const validateProduct = (req, res, next) => {
   const { name, price, stock } = req.body
 
-  // 1. Validar campo 'name' (Obligatorio, string no vacío)
+  // Validar campo 'name' (Obligatorio, string no vacío)
   if (!name || typeof name !== 'string' || name.trim() === '') {
     return res.status(400).json({
       ok: false,
@@ -9,7 +9,7 @@ export const validateProduct = (req, res, next) => {
     })
   }
 
-  // 2. Validar campo 'price' (Viene como String de Multer, validamos y convertimos)
+  // Validar campo 'price' (Viene como String de Multer, validamos y convertimos)
   if (price === undefined || price.trim() === '') {
     return res.status(400).json({
       ok: false,
@@ -30,7 +30,7 @@ export const validateProduct = (req, res, next) => {
   req.body.price = parsedPrice;
 
 
-  // 3. Validar campo 'stock' (Opcional, pero si se envía debe ser entero >= 0)
+  // Validar campo 'stock' (Opcional, pero si se envía debe ser entero >= 0)
   if (stock !== undefined && stock !== '') {
     const parsedStock = Number(stock);
 

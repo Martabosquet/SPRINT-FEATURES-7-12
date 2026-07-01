@@ -20,23 +20,26 @@ const {
   addToWishlist,
   getWishlistByUser,
   removeFromWishlist,
-  addMovieToWishlist,
-  removeMovieFromWishlist,
-  isMovieInWishlist,
+  addProductToWishlist,
+  removeProductFromWishlist,
+  isProductInWishlist,
 } = await import("../../services/wishlist.service.js")
 
 describe("wishlist.service", () => {
+  // Tests unitarios para wishlist.service: accede a productos y gestiona la lista.
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   describe("database operations", () => {
+    // PRUEBA: lanzar error si el producto no existe al intentar añadir a wishlist.
     it("throws when the product does not exist", async () => {
       prisma.product.findUnique.mockResolvedValue(null)
 
       await expect(addToWishlist("user-1", "product-1")).rejects.toThrow("El producto no existe")
     })
 
+    // PRUEBA: agrega un producto a wishlist cuando el producto existe.
     it("adds an item to the wishlist when the product exists", async () => {
       prisma.product.findUnique.mockResolvedValue({ id: "product-1", title: "Película" })
       saveMock.mockResolvedValue({ id: "wishlist-1", userId: "user-1", productId: "product-1" })
@@ -49,6 +52,7 @@ describe("wishlist.service", () => {
       expect(result).toEqual({ id: "wishlist-1", userId: "user-1", productId: "product-1" })
     })
 
+    // PRUEBA: obtiene la lista de deseos de un usuario.
     it("returns the wishlist for a user", async () => {
       const wishlistItems = [{ userId: "user-1", productId: "product-1" }]
       WishlistMock.find.mockResolvedValue(wishlistItems)
@@ -59,6 +63,7 @@ describe("wishlist.service", () => {
       expect(result).toBe(wishlistItems)
     })
 
+    // PRUEBA: elimina un item de la wishlist por su id.
     it("removes an item from the wishlist", async () => {
       const removedItem = { id: "wishlist-1", userId: "user-1", productId: "product-1" }
       WishlistMock.findByIdAndDelete.mockResolvedValue(removedItem)
@@ -71,21 +76,21 @@ describe("wishlist.service", () => {
   })
 
   describe("pure helper functions", () => {
-    it("adds a movie to the wishlist when it is not already present", () => {
-      expect(addMovieToWishlist(["1", "2"], "3")).toEqual(["1", "2", "3"])
+    it("adds a product to the wishlist when it is not already present", () => {
+      expect(addProductToWishlist(["1", "2"], "3")).toEqual(["1", "2", "3"])
     })
 
-    it("does not duplicate a movie already in the wishlist", () => {
-      expect(addMovieToWishlist(["1", "2"], "2")).toEqual(["1", "2"])
+    it("does not duplicate a product already in the wishlist", () => {
+      expect(addProductToWishlist(["1", "2"], "2")).toEqual(["1", "2"])
     })
 
-    it("removes a movie from the wishlist", () => {
-      expect(removeMovieFromWishlist(["1", "2", "3"], "2")).toEqual(["1", "3"])
+    it("removes a product from the wishlist", () => {
+      expect(removeProductFromWishlist(["1", "2", "3"], "2")).toEqual(["1", "3"])
     })
 
-    it("checks if a movie is in the wishlist", () => {
-      expect(isMovieInWishlist(["1", "2"], "2")).toBe(true)
-      expect(isMovieInWishlist(["1", "2"], "3")).toBe(false)
+    it("checks if a product is in the wishlist", () => {
+      expect(isProductInWishlist(["1", "2"], "2")).toBe(true)
+      expect(isProductInWishlist(["1", "2"], "3")).toBe(false)
     })
   })
 })

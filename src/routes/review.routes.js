@@ -7,12 +7,12 @@ import { requireRole } from "../middlewares/requireRole.js"
 
 const router = express.Router()
 
-//Ruta pública
-router.get("/reviews/movie/:movieId", reviewController.getReviewsByMovie)
+// Rutas de reviews ligadas a productos
+router.get("/api/products/:productId/reviews", reviewController.getReviewsByProduct)
+router.post("/api/products/:productId/reviews", authMiddleware, reviewController.createReview)
 
-// Rutas privadas con autenticación (Solo administradores pueden gestionar las reseñas)
-router.post("/reviews", authMiddleware, requireRole("admin"), reviewController.createReview)
-router.put("/reviews/:id", authMiddleware, requireRole("admin"), reviewController.updateReview)
-router.delete("/reviews/:id", authMiddleware, requireRole("admin"), reviewController.deleteReview)
+// Rutas administrativas adicionales que requieren autenticación y rol de admin
+router.put("/api/reviews/:id", authMiddleware, requireRole("admin"), reviewController.updateReview)
+router.delete("/api/reviews/:id", authMiddleware, requireRole("admin"), reviewController.deleteReview)
 
 export default router

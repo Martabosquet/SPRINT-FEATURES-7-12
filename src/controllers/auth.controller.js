@@ -1,14 +1,14 @@
 import { authService } from "../services/auth.service.js"
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const { email, password, role } = req.body;
+    //para el ejercicio, permito que al registrar el usuario se pueda asignar el rol de admin, pero en la realidad no se suele permitir. Se codifica como para que el rol por defecto sea user
 
     if (!email || !password) {
-      return res.status(400).json({
-        ok: false,
-        error: "Email y contraseña son requeridos",
-      });
+      const error = new Error("Email y contraseña son requeridos");
+      error.statusCode = 400;
+      throw error;
     }
 
     const newUser = await authService.registerUser(email, password, role);
@@ -19,14 +19,11 @@ const register = async (req, res) => {
       data: newUser,
     });
   } catch (error) {
-    res.status(400).json({
-      ok: false,
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const login = async (req, res) => {
+const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
 
@@ -41,7 +38,8 @@ const login = async (req, res) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production", // Para producción es obligatorio secure si use SameSite=None
+      sameSite: "none",
       maxAge: 2 * 60 * 60 * 1000,
     }
 
@@ -53,19 +51,20 @@ const login = async (req, res) => {
     }) //no enseño el token en la respuesta, para evitar que alguien lo pueda robar. Solo lo guardo en la cookie
 
   } catch (error) {
-    res.status(401).json({
-      ok: false,
-      error: error.message,
-    })
+    next(error);
   }
 }
 
-const logout = (req, res) => {
-  res.clearCookie("token")
-  res.json({
-    ok: true,
-    message: "Sesión cerrada",
-  }) //no hay que indicar qué usuario es el que cierra sesión, solo borra la cookie
+const logout = (req, res, next) => {
+  try {
+    res.clearCookie("token")
+    res.json({
+      ok: true,
+      message: "Sesión cerrada",
+    }) //no hay que indicar qué usuario es el que cierra sesión, solo borra la cookie
+  } catch (error) {
+    next(error);
+  }
 } //buena práctica de cara a front-end que aunque des varios clicks en cerrar sesión siga saliendo "Sesión cerrada" y no dé error (endpoint silencioso e idempotente)
 
 const getProfile = (req, res) => {

@@ -1,10 +1,10 @@
 import * as wishlistService from "../services/wishlist.service.js"
 
-export const addToWishlist = async (req, res) => {
+export const addToWishlist = async (req, res, next) => {
     try {
         // userId extraído de forma segura del token JWT (no del body)
         const userId = String(req.user.id)
-        // productId extraído de los parámetros de la URL (/api/wishlist/:productId)
+        // productId extraído de los parámetros de la URL
         const { productId } = req.params
 
         if (!productId) {
@@ -20,14 +20,11 @@ export const addToWishlist = async (req, res) => {
             data: wishlistItem,
         })
     } catch (error) {
-        res.status(400).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const getWishlistByUser = async (req, res) => {
+export const getWishlistByUser = async (req, res, next) => {
     try {
         // userId extraído de forma segura del token JWT
         const userId = String(req.user.id)
@@ -38,14 +35,11 @@ export const getWishlistByUser = async (req, res) => {
             data: wishlistItems,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const removeFromWishlist = async (req, res) => {
+export const removeFromWishlist = async (req, res, next) => {
     try {
         const wishlistItem = await wishlistService.removeFromWishlist(req.params.id)
 
@@ -60,9 +54,6 @@ export const removeFromWishlist = async (req, res) => {
             message: "Elemento eliminado de la wishlist",
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }

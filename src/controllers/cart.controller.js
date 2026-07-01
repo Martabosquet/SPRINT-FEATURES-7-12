@@ -1,6 +1,6 @@
-import { getCart, getCartById, addItem, removeItem, decreaseItemQuantity, checkout } from "../services/cart.service.js"
+import { getCart, getCartById, addItem, removeItem, decreaseItemQuantity, checkout, getOrdersByUser, getOrderById } from "../services/cart.service.js"
 
-export const getCartController = async (req, res) => {
+export const getCartController = async (req, res, next) => {
     try {
         const cart = await getCart(String(req.user.id)) // Convertimos a String porque Cart.userId es String en Prisma
         res.json({
@@ -8,14 +8,11 @@ export const getCartController = async (req, res) => {
             data: cart,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const getCartByIdController = async (req, res) => {
+export const getCartByIdController = async (req, res, next) => {
     try {
         const cart = await getCartById(req.params.cartId)
         res.json({
@@ -23,14 +20,11 @@ export const getCartByIdController = async (req, res) => {
             data: cart,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const addItemController = async (req, res) => {
+export const addItemController = async (req, res, next) => {
     try {
         const { productId, quantity } = req.body
 
@@ -47,14 +41,11 @@ export const addItemController = async (req, res) => {
             data: item,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const checkoutController = async (req, res) => {
+export const checkoutController = async (req, res, next) => {
     try {
         const order = await checkout(String(req.user.id)) // Convertimos a String porque Cart.userId es String en Prisma
         res.json({
@@ -62,14 +53,43 @@ export const checkoutController = async (req, res) => {
             data: order,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const removeItemController = async (req, res) => {
+export const getOrdersController = async (req, res, next) => {
+    try {
+        const orders = await getOrdersByUser(String(req.user.id))
+        res.json({
+            ok: true,
+            data: orders,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const getOrderByIdController = async (req, res, next) => {
+    try {
+        const order = await getOrderById(String(req.user.id), req.params.orderId)
+
+        if (!order) {
+            return res.status(404).json({
+                ok: false,
+                error: "Pedido no encontrado",
+            })
+        }
+
+        res.json({
+            ok: true,
+            data: order,
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+export const removeItemController = async (req, res, next) => {
     try {
         const { itemId } = req.params
         const deleted = await removeItem(itemId)
@@ -86,14 +106,11 @@ export const removeItemController = async (req, res) => {
             message: "Elemento eliminado del carrito",
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }
 
-export const decreaseItemQuantityController = async (req, res) => {
+export const decreaseItemQuantityController = async (req, res, next) => {
     try {
         const { itemId } = req.params
         const { quantity } = req.body
@@ -119,9 +136,6 @@ export const decreaseItemQuantityController = async (req, res) => {
             data: item,
         })
     } catch (error) {
-        res.status(500).json({
-            ok: false,
-            error: error.message,
-        })
+        next(error);
     }
 }

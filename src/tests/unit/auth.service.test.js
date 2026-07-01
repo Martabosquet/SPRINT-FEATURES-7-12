@@ -23,12 +23,14 @@ const { default: prisma } = await import("../../config/prismaClient.js")
 const { authService } = await import("../../services/auth.service.js")
 
 describe("authService", () => {
+  // Tests unitarios para authService: registro y login.
   beforeEach(() => {
     jest.clearAllMocks()
     process.env.JWT_SECRET = "test-secret"
   })
 
   describe("registerUser", () => {
+    // PRUEBA: registra un usuario nuevo cuando el email no existe previamente.
     it("creates a user when the email is not registered", async () => {
       prisma.user.findUnique.mockResolvedValue(null)
       bcrypt.hash.mockResolvedValue("hashed-password")
@@ -59,6 +61,7 @@ describe("authService", () => {
       expect(result).toMatchObject({ id: "user-id", email: "test@example.com", role: "user" })
     })
 
+    // PRUEBA: lanza un error si el email ya está registrado.
     it("throws when the email is already registered", async () => {
       prisma.user.findUnique.mockResolvedValue({ id: "user-id", email: "test@example.com" })
 
@@ -69,6 +72,7 @@ describe("authService", () => {
   })
 
   describe("login", () => {
+    // PRUEBA: genera un JWT válido cuando las credenciales son correctas.
     it("returns a token when credentials are valid", async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: "user-id",
@@ -95,6 +99,7 @@ describe("authService", () => {
       expect(token).toBe("valid-token")
     })
 
+    // PRUEBA: lanza un error si el usuario no existe.
     it("throws when the user does not exist", async () => {
       prisma.user.findUnique.mockResolvedValue(null)
 
@@ -103,6 +108,7 @@ describe("authService", () => {
       )
     })
 
+    // PRUEBA: lanza un error cuando la contraseña es incorrecta.
     it("throws when the password is invalid", async () => {
       prisma.user.findUnique.mockResolvedValue({
         id: "user-id",

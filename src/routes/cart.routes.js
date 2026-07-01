@@ -8,6 +8,8 @@ import {
     removeItemController,
     decreaseItemQuantityController,
     checkoutController,
+    getOrdersController,
+    getOrderByIdController,
 } from "../controllers/cart.controller.js"
 
 const router = express.Router()
@@ -18,5 +20,9 @@ router.post("/api/cart/items", authMiddleware, addItemController) //y si le sumo
 router.delete("/api/cart/items/:itemId", authMiddleware, removeItemController)
 router.patch("/api/cart/items/:itemId", authMiddleware, decreaseItemQuantityController) //lo he creado para poder restar quantity de un item del carrito y si llega a 0, se elimina el item del carrito
 router.post("/api/cart/checkout", authMiddleware, checkoutController)
+
+// Historial de pedidos del usuario
+router.get("/api/orders", authMiddleware, getOrdersController)
+router.get("/api/orders/:orderId", authMiddleware, getOrderByIdController)
 
 export default router

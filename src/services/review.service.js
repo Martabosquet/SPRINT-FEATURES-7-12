@@ -5,8 +5,8 @@ export const createReview = async (data) => {
     return await review.save()
 }
 
-export const getReviewsByMovie = async (movieId) => {
-    return await Review.find({ movieId })
+export const getReviewsByProduct = async (productId) => {
+    return await Review.find({ productId })
 }
 
 export const getReviewById = async (id) => {
@@ -42,9 +42,9 @@ export const filterByMinRating = (reviews, minRating) => {
 
 // Crear una review válida
 
-export const createReviewObject = (movieId, userId, rating, comment = "") => {
-    if (!movieId || !userId || !rating) {
-        throw new Error("movieId, userId y rating son obligatorios")
+export const createReviewObject = (productId, userId, rating, comment = "") => {
+    if (!productId || !userId || !rating) {
+        throw new Error("productId, userId y rating son obligatorios")
     }
 
     if (rating < 1 || rating > 10) {
@@ -52,7 +52,7 @@ export const createReviewObject = (movieId, userId, rating, comment = "") => {
     }
 
     return {
-        movieId,
+        productId,
         userId,
         rating,
         comment,

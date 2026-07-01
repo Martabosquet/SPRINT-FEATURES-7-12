@@ -14,7 +14,7 @@ await jest.unstable_mockModule("../../models/review.model.js", () => ({
 
 const {
   createReview,
-  getReviewsByMovie,
+  getReviewsByProduct,
   getReviewById,
   updateReview,
   deleteReview,
@@ -25,31 +25,35 @@ const {
 } = await import("../../services/review.service.js")
 
 describe("review.service", () => {
+  // Tests unitarios para review.service: acceso a DB y helpers puros.
   beforeEach(() => {
     jest.clearAllMocks()
   })
 
   describe("database operations", () => {
+    // PRUEBA: guardar una review nueva en la base de datos.
     it("creates a review using Review.save", async () => {
-      saveMock.mockResolvedValue({ id: "review-1", movieId: "movie-1", userId: "user-1", rating: 8 })
+      saveMock.mockResolvedValue({ id: "review-1", productId: "product-1", userId: "user-1", rating: 8 })
 
-      const result = await createReview({ movieId: "movie-1", userId: "user-1", rating: 8 })
+      const result = await createReview({ productId: "product-1", userId: "user-1", rating: 8 })
 
-      expect(ReviewMock).toHaveBeenCalledWith({ movieId: "movie-1", userId: "user-1", rating: 8 })
+      expect(ReviewMock).toHaveBeenCalledWith({ productId: "product-1", userId: "user-1", rating: 8 })
       expect(saveMock).toHaveBeenCalled()
-      expect(result).toEqual({ id: "review-1", movieId: "movie-1", userId: "user-1", rating: 8 })
+      expect(result).toEqual({ id: "review-1", productId: "product-1", userId: "user-1", rating: 8 })
     })
 
-    it("gets reviews by movie id", async () => {
-      const reviews = [{ movieId: "movie-1", rating: 7 }]
+    // PRUEBA: consulta reviews asociadas a un producto.
+    it("gets reviews by product id", async () => {
+      const reviews = [{ productId: "product-1", rating: 7 }]
       ReviewMock.find.mockResolvedValue(reviews)
 
-      const result = await getReviewsByMovie("movie-1")
+      const result = await getReviewsByProduct("product-1")
 
-      expect(ReviewMock.find).toHaveBeenCalledWith({ movieId: "movie-1" })
+      expect(ReviewMock.find).toHaveBeenCalledWith({ productId: "product-1" })
       expect(result).toBe(reviews)
     })
 
+    // PRUEBA: obtiene una review por su id.
     it("gets a review by id", async () => {
       const review = { id: "review-1", rating: 9 }
       ReviewMock.findById.mockResolvedValue(review)
@@ -60,6 +64,7 @@ describe("review.service", () => {
       expect(result).toBe(review)
     })
 
+    // PRUEBA: actualiza una review existente.
     it("updates a review by id", async () => {
       const updatedReview = { id: "review-1", rating: 10 }
       ReviewMock.findByIdAndUpdate.mockResolvedValue(updatedReview)
@@ -70,6 +75,7 @@ describe("review.service", () => {
       expect(result).toBe(updatedReview)
     })
 
+    // PRUEBA: elimina una review por id.
     it("deletes a review by id", async () => {
       const deletedReview = { id: "review-1", rating: 6 }
       ReviewMock.findByIdAndDelete.mockResolvedValue(deletedReview)
@@ -104,10 +110,10 @@ describe("review.service", () => {
     })
 
     it("creates a valid review object", () => {
-      const review = createReviewObject("movie-1", "user-1", 7, "Buen comentario")
+      const review = createReviewObject("product-1", "user-1", 7, "Buen comentario")
 
       expect(review).toMatchObject({
-        movieId: "movie-1",
+        productId: "product-1",
         userId: "user-1",
         rating: 7,
         comment: "Buen comentario",
@@ -117,12 +123,12 @@ describe("review.service", () => {
 
     it("throws if required fields are missing", () => {
       expect(() => createReviewObject(null, "user-1", 5)).toThrow(
-        "movieId, userId y rating son obligatorios",
+        "productId, userId y rating son obligatorios",
       )
     })
 
     it("throws if rating is outside the allowed range", () => {
-      expect(() => createReviewObject("movie-1", "user-1", 11)).toThrow(
+      expect(() => createReviewObject("product-1", "user-1", 11)).toThrow(
         "El rating debe tener un valor entre 1 y 10",
       )
     })
